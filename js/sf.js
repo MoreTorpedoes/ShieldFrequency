@@ -184,21 +184,23 @@ SF.Update = function ( )
             Math.seedrandom(i);
             SF.sprite.asteroids[i].angle = ctime() * (Math.random() * 90.0 - 45.0);
         }
+
+        SF.player.aY = SF.player.y + (Math.sin(ctime()) * 1.0);
         
         var t = 0.0;
         if ((SF.player.toLane - SF.player.lane) > 0.0)
         {
             var t = SF.sprite.shipr.alpha = Math.pow(Math.min(SF.player.toLane - SF.player.lane, 1), 0.3);
-            SF.bfr.draw(SF.sprite.shipr, LX(SF.player.lane), PY(100 - 12 + Math.sin(ctime()) * 1.0));
+            SF.bfr.draw(SF.sprite.shipr, LX(SF.player.lane), PY(SF.player.aY));
         }
         else if ((SF.player.toLane - SF.player.lane) < -0.0)
         {
             var t = SF.sprite.shipl.alpha = Math.pow(Math.min(SF.player.lane - SF.player.toLane, 1), 0.3);
-            SF.bfr.draw(SF.sprite.shipl, LX(SF.player.lane), PY(100 - 12 + Math.sin(ctime()) * 1.0));
+            SF.bfr.draw(SF.sprite.shipl, LX(SF.player.lane), PY(SF.player.aY));
         }
         
         SF.sprite.ship.alpha = 1.0 - t;
-        SF.bfr.draw(SF.sprite.ship, LX(SF.player.lane), PY(100 - 12 + Math.sin(ctime()) * 1.0));
+        SF.bfr.draw(SF.sprite.ship, LX(SF.player.lane), PY(SF.player.aY));
 
         SF.sprite.shields[0].angle = SF.sprite.asteroids[9].angle;
         SF.bfr.draw(SF.sprite.shields[0], LX(-1), PY(20 + SF.aster.speed * ctime()));
@@ -216,17 +218,29 @@ SF.Update = function ( )
             SF.player.toLane += 1;
             if (SF.player.toLane > 2) SF.player.toLane = 2;
         }
+        if (SF.ckey.UP)
+        {
+            SF.player.toY = SF.player.y - 5;
+            if (SF.player.toY < 10) SF.player.toY = 10;
+        }
+        if (SF.ckey.DOWN)
+        {
+            SF.player.toY = SF.player.y + 5;
+            if (SF.player.toY > 90) SF.player.toY = 90;
+        }
+        if (!SF.ckey.UP && !SF.ckey.DOWN)
+            SF.player.toY += (SF.player.y - SF.player.toY) * delta * 0.0001;
         if (SF.ckey.SPACEBAR && (ctime() - SF.player.lastFire) > SF.LASER_RATE)
         {
             SF.lasers.push({
                 x: LPX(SF.player.lane) - 3.65,
-                y: 100 - 12 + Math.sin(ctime()) * 1.0,
+                y: SF.player.aY,
                 freq: SF.player.freq,
                 dir: -1
             });
             SF.lasers.push({
                 x: LPX(SF.player.lane) + 3.65,
-                y: 100 - 12 + Math.sin(ctime()) * 1.0,
+                y: SF.player.aY,
                 freq: SF.player.freq,
                 dir: -1
             });
@@ -258,6 +272,7 @@ SF.Update = function ( )
         }
 
         SF.player.lane += Math.max(Math.min(SF.player.toLane - SF.player.lane, 1), -1) * Math.max(Math.min(delta * 1.5, 1), 0.05);
+        SF.player.y += 2.5 * Math.max(Math.min(SF.player.toY - SF.player.y, 4), -4) * Math.max(Math.min(delta * 0.05, 1), 0.05);
     }
     else if (SF.state === SF.STATE_GAME_OVER)
     {
@@ -322,7 +337,9 @@ SF.InitState = function ( state )
             toLane: 0,
             freq: 2,
             lastFire: ctime(),
-            fireSinceFreq: true
+            fireSinceFreq: true,
+            y: 110,
+            toY: 80
 
         };
 
