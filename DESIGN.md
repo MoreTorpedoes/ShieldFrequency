@@ -31,8 +31,8 @@ Controls:
 
  - Player presses left and right arrows to switch lanes (animated, timed)
  - Player presses space to fire
- - Default shield frequency is 2
- - User presses number keys to type the shield frequency
+ - Default weapon frequency is 2
+ - User presses number keys to type the weapon frequency
  - Backspace acts as expected on numbers
  - Space to fire (animated, timed)
  - After firing, any number key press will erase current frequency first
