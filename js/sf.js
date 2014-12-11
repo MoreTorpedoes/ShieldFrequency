@@ -184,6 +184,11 @@ SF.Update = function ( )
             Math.seedrandom(i);
             SF.sprite.asteroids[i].angle = ctime() * (Math.random() * 90.0 - 45.0);
         }
+        SF.sprite.ship.scale.set(PSCALE(10, 128.0));
+        SF.sprite.shipl.scale.set(PSCALE(10, 128.0));
+        SF.sprite.shipr.scale.set(PSCALE(10, 128.0));
+        for (var i=0; i<10; i++)
+            SF.sprite.asteroids[i].scale.set(PSCALE(20*(i/19+0.5), 256.0));
 
         SF.player.aY = SF.player.y + (Math.sin(ctime()) * 1.0);
         
@@ -202,22 +207,38 @@ SF.Update = function ( )
         SF.sprite.ship.alpha = 1.0 - t;
         SF.bfr.draw(SF.sprite.ship, LX(SF.player.lane), PY(SF.player.aY));
 
-        SF.sprite.shields[0].angle = SF.sprite.asteroids[9].angle;
-        SF.bfr.draw(SF.sprite.shields[0], LX(-1), PY(20 + SF.aster.speed * ctime()));
-        SF.bfr.draw(SF.sprite.asteroids[9], LX(-1), PY(20 + SF.aster.speed * ctime()));
-
-        SF.bfr.draw(SF.sprite.asteroids[1], LX(1), PY(70 + SF.aster.speed * ctime()));
-
-        if (SF.ckey.LEFT && !SF.lkey.LEFT)
+        for (var i=0; i<SF.aster.all.length; i++)
         {
-            SF.player.toLane -= 1;
+            var A = SF.aster.all[i];
+            A.y += SF.aster.speed * delta;
+            var sz = A.sz;
+            var sh = 0;
+            SF.sprite.shields[sh].angle = SF.sprite.asteroids[sz].angle;
+            SF.sprite.shields[sh].scale.set(PSCALE(33 * (sz/19+0.5), 420.0));
+            SF.bfr.draw(SF.sprite.shields[sh], LX(A.lane), PY(A.y));
+            SF.bfr.draw(SF.sprite.asteroids[sz], LX(A.lane), PY(A.y));
+
+            if (A.y > 111)
+            {
+                SF.player.population -= Math.floor(100 * sz / 9) / 100;
+                SF.aster.all.splice(i, 1);
+                i --;
+                continue;
+            }
+        }
+
+        if (SF.ckey.LEFT)
+        {
+            SF.player.toLane = SF.player.lane - .5;
             if (SF.player.toLane < -2) SF.player.toLane = -2;
         }
-        if (SF.ckey.RIGHT && !SF.lkey.RIGHT)
+        if (SF.ckey.RIGHT)
         {
-            SF.player.toLane += 1;
+            SF.player.toLane = SF.player.lane + .5;
             if (SF.player.toLane > 2) SF.player.toLane = 2;
         }
+        if (!SF.ckey.LEFT && !SF.ckey.RIGHT)
+            SF.player.toLane += (SF.player.lane - SF.player.toLane) * delta * 0.0001;
         if (SF.ckey.UP)
         {
             SF.player.toY = SF.player.y - 5;
@@ -345,7 +366,7 @@ SF.InitState = function ( state )
 
         SF.aster = {
             all: [],
-            speed: 1.0,
+            speed: 3.0,
             max: 5,
             nsp: 1.0, // No shield percentage
             gp: 0.0,  // Green shield percentage
@@ -357,9 +378,31 @@ SF.InitState = function ( state )
 
         SF.lasers = [];
 
+        Math.seedrandom(SF.game.time.now);
+        for (var i = 0; i < 5; i ++) SF.AddAsteroid();
     }
     else if (SF.state === SF.STATE_GAME_OVER)
     {
 
     }
+};
+
+SF.AddAsteroid = function ( l )
+{
+    var na = {
+        lane: Math.floor(Math.random()*4.9999) - 2,
+        y: -Math.floor(Math.random()*SF.GH/20.0) * 20.0 - 20.0,
+        sz: Math.floor(Math.random()*9.9999),
+        freq: 2
+    };
+
+    for (var i=0; i<SF.aster.all.length; i++)
+    {
+        if (SF.aster.all[i].lane === na.lane && Math.abs(SF.aster.all[i].y - na.y) < 15.0)
+            return l > 20 ?
+                null :
+                SF.AddAsteroid(l ? (l+1) : 1);
+    }
+
+    SF.aster.all.push(na);
 };
